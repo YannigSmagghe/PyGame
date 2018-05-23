@@ -30,6 +30,9 @@ class Player(pygame.sprite.Sprite):
     # List of sprites we can bump against
     level = None
 
+    # Life player
+    alive = True
+
     # -- Methods
     def __init__(self):
         """ Constructor function """
@@ -105,8 +108,11 @@ class Player(pygame.sprite.Sprite):
             # If we are moving right,
             # set our right side to the left side of the item we hit
             if self.change_x > 0:
+                # print('hit box left')
                 self.rect.right = block.rect.left
             elif self.change_x < 0:
+
+                # print('hit box right')
                 # Otherwise if we are moving left, do the opposite.
                 self.rect.left = block.rect.right
 
@@ -116,18 +122,37 @@ class Player(pygame.sprite.Sprite):
         # Check and see if we hit anything
         block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
         for block in block_hit_list:
-
             # Reset our position based on the top/bottom of the object.
             if self.change_y > 0:
+                # print('hit box bottom')
                 self.rect.bottom = block.rect.top
             elif self.change_y < 0:
+                # print('hit box top')
                 self.rect.top = block.rect.bottom
 
-            # Stop our vertical movement
-            self.change_y = 0
+        # Ennemy list
+        enemy_hit_list = pygame.sprite.spritecollide(self, self.level.enemy_list, False)
+        for block in enemy_hit_list:
+            # If we are moving right,
+            # set our right side to the left side of the item we hit
+            if self.change_x > 0:
+                self.alive = False
+                self.rect.right = block.rect.left
+            elif self.change_x < 0:
+                self.alive = False
+                # Otherwise if we are moving left, do the opposite.
+                self.rect.left = block.rect.right
 
-            if isinstance(block, MovingPlatform):
-                self.rect.x += block.change_x
+        # Check and see if we hit anything
+        enemy_hit_list = pygame.sprite.spritecollide(self, self.level.enemy_list, False)
+        for block in enemy_hit_list:
+            # Reset our position based on the top/bottom of the object.
+            if self.change_y > 0:
+                self.alive = False
+                self.rect.bottom = block.rect.top
+            elif self.change_y < 0:
+                self.alive = False
+                self.rect.top = block.rect.bottom
 
     def calc_grav(self):
         """ Calculate effect of gravity. """
@@ -136,10 +161,13 @@ class Player(pygame.sprite.Sprite):
         else:
             self.change_y += .35
 
-        # See if we are on the ground.
+        # See if we are on the ground. So fall if we aren't
+        # if self.rect.y >= constants.SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
+        #     self.change_y = 0
+        #     self.rect.y = constants.SCREEN_HEIGHT - self.rect.height
         if self.rect.y >= constants.SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
-            self.change_y = 0
-            self.rect.y = constants.SCREEN_HEIGHT - self.rect.height
+            self.alive = False
+
 
     def jump(self):
         """ Called when user hits 'jump' button. """

@@ -49,6 +49,10 @@ def main():
     level_list.append(levels.Level_01(player))
     level_list.append(levels.Level_02(player))
 
+    dead_list=[]
+    dead_list.append(levels.Level_Dead(player))
+    dead_list.append(levels.Level_Win(player))
+
     # Set the current level
     current_level_no = 0
     current_level = level_list[current_level_no]
@@ -57,7 +61,7 @@ def main():
     player.level = current_level
 
     player.rect.x = 340
-    player.rect.y = constants.SCREEN_HEIGHT - player.rect.height
+    player.rect.y = 0
     active_sprite_list.add(player)
 
     #Loop until the user clicks the close button.
@@ -68,6 +72,20 @@ def main():
 
     # -------- Main Program Loop -----------
     while not done:
+        if player.alive:
+            # initialize font; must be called after 'pygame.init()' to avoid 'Font not Initialized' error
+            # print('alive')
+            x=1
+
+        else:
+            # INSIDE OF THE GAME LOOP
+
+            player.stop()
+            current_level = dead_list[0]
+            player.level = current_level
+
+            # print('dead')
+
         for event in pygame.event.get(): # User did something
             if event.type == pygame.QUIT: # If user clicked close
                 done = True # Flag that we are done so we exit this loop
@@ -99,7 +117,10 @@ def main():
             current_level.shift_world(-diff)
 
         # If the player gets near the left side, shift the world right (+x)
+        print(player.rect.x)
         if player.rect.x <= 120:
+            player.alive = False
+            player.stop()
             diff = 120 - player.rect.x
             player.rect.x = 120
             current_level.shift_world(diff)
