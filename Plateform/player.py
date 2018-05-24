@@ -6,7 +6,6 @@ import pygame
 
 import constants
 
-from platforms import MovingPlatform
 from spritesheet_functions import SpriteSheet
 
 
@@ -18,6 +17,7 @@ class Player(pygame.sprite.Sprite):
     # Set speed vector of player
     change_x = 0
     change_y = 0
+    speed = 0
 
     # This holds all the images for the animated walk left/right
     # of our player
@@ -156,44 +156,62 @@ class Player(pygame.sprite.Sprite):
 
     def calc_grav(self):
         """ Calculate effect of gravity. """
-        if self.change_y == 0:
-            self.change_y = 1
-        else:
-            self.change_y += .35
+        if self.alive == True:
+            if self.change_y == 0:
+                self.change_y = 1
+            else:
+                self.change_y += .35
+        if self.alive == True:
+            # See if we are on the ground. So fall if we aren't
+            # if self.rect.y >= constants.SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
+            #     self.change_y = 0
+            #     self.rect.y = constants.SCREEN_HEIGHT - self.rect.height
+            print('self.rect.y', self.rect.y)
+            print('const', constants.SCREEN_HEIGHT - self.rect.height)
+            print('self.change_y', self.change_y)
+            if self.rect.y > constants.SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
+                print('dead')
+                self.alive = False
 
-        # See if we are on the ground. So fall if we aren't
-        # if self.rect.y >= constants.SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
-        #     self.change_y = 0
-        #     self.rect.y = constants.SCREEN_HEIGHT - self.rect.height
-        if self.rect.y >= constants.SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
-            self.alive = False
 
 
     def jump(self):
         """ Called when user hits 'jump' button. """
+        if self.alive == True:
+            # move down a bit and see if there is a platform below us.
+            # Move down 2 pixels because it doesn't work well if we only move down 1
+            # when working with a platform moving down.
+            self.rect.y += 2 + (self.speed)
+            platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+            self.rect.y -= 2 + (self.speed)
 
-        # move down a bit and see if there is a platform below us.
-        # Move down 2 pixels because it doesn't work well if we only move down 1
-        # when working with a platform moving down.
-        self.rect.y += 2
-        platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-        self.rect.y -= 2
-
-        # If it is ok to jump, set our speed upwards
-        if len(platform_hit_list) > 0 or self.rect.bottom >= constants.SCREEN_HEIGHT:
-            self.change_y = -10
+            # If it is ok to jump, set our speed upwards
+            if len(platform_hit_list) > 0 or self.rect.bottom >= constants.SCREEN_HEIGHT:
+                self.change_y = -10 - (self.speed)
 
     # Player-controlled movement:
     def go_left(self):
-        """ Called when the user hits the left arrow. """
-        self.change_x = -6
-        self.direction = "L"
+        if self.alive == True:
+            """ Called when the user hits the left arrow. """
+            self.change_x = -6 - self.speed * 2
+            self.direction = "L"
 
     def go_right(self):
         """ Called when the user hits the right arrow. """
-        self.change_x = 6
-        self.direction = "R"
+        if self.alive == True:
+            print(self.alive)
+            self.change_x = 6 + self.speed * 2
+            self.direction = "R"
 
     def stop(self):
         """ Called when the user lets off the keyboard. """
         self.change_x = 0
+        self.change_y = 0
+
+    def dead(self):
+        """ Called when the user lets off the keyboard. """
+        self.alive = False
+
+    def win(self):
+        """ Called when the user lets off the keyboard. """
+        self.alive = "Win"
