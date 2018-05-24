@@ -28,6 +28,7 @@ import pygame
 
 import constants
 import levels
+from score import Score
 
 from player import Player
 
@@ -43,7 +44,7 @@ def main():
 
     # Create the player
     player = Player()
-
+    score = Score()
     # Create all the levels
     level_list = []
     level_list.append(levels.Level_01(player))
@@ -54,6 +55,7 @@ def main():
     dead_list.append(levels.Level_Win(player))
 
     # Set the current level
+    #set as 0
     current_level_no = 0
     current_level = level_list[current_level_no]
 
@@ -63,6 +65,8 @@ def main():
     player.rect.x = 340
     player.rect.y = 0
     active_sprite_list.add(player)
+
+    accurate_speed  = 1
 
     #Loop until the user clicks the close button.
     done = False
@@ -75,14 +79,19 @@ def main():
         if player.alive:
             # initialize font; must be called after 'pygame.init()' to avoid 'Font not Initialized' error
             # print('alive')
-            x=1
+            # done = False
+            # current_level = dead_list[1]
+            xx=1
+        elif player.alive == "Win":
+            print('win')
+            current_level = dead_list[1]
 
         else:
             # INSIDE OF THE GAME LOOP
-
-            player.stop()
+            player.dead()
             current_level = dead_list[0]
             player.level = current_level
+            done = False
 
             # print('dead')
 
@@ -109,6 +118,7 @@ def main():
 
         # Update items in the level
         current_level.update()
+        player.update()
 
         # If the player gets near the right side, shift the world left (-x)
         if player.rect.x >= 500:
@@ -117,8 +127,7 @@ def main():
             current_level.shift_world(-diff)
 
         # If the player gets near the left side, shift the world right (+x)
-        print(player.rect.x)
-        if player.rect.x <= 120:
+        if player.rect.x < 120:
             player.alive = False
             player.stop()
             diff = 120 - player.rect.x
@@ -127,13 +136,18 @@ def main():
 
         # If the player gets to the end of the level, go to the next level
         current_position = player.rect.x + current_level.world_shift
+        # print('clws: {}'.format(current_level.world_shift))
         if current_position < current_level.level_limit:
             player.rect.x = 120
             if current_level_no < len(level_list)-1:
                 current_level_no += 1
+                player.speed += player.speed + accurate_speed
                 current_level = level_list[current_level_no]
                 player.level = current_level
-
+                player.change_x = 6 + player.speed * 2
+            else:
+                current_level = dead_list[1]
+                player.win()
         # ALL CODE TO DRAW SHOULD GO BELOW THIS COMMENT
         current_level.draw(screen)
         active_sprite_list.draw(screen)
@@ -142,7 +156,7 @@ def main():
 
         # Limit to 60 frames per second
         clock.tick(60)
-
+        score.update(screen,player,current_level_no)
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
 
